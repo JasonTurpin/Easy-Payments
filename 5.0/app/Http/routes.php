@@ -11,6 +11,9 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Sign in / sign out
+Route::any('/signIn', ['as' => 'portal.signin', 'uses' => 'PortalController@do_signIn']);
+Route::any('/signOut', ['as' => 'portal.signout', 'uses' => 'PortalController@do_signOut']);
+
+// Portal level screens
+Route::get('/Portal', ['as' => 'portal.home', 'uses' => 'PortalController@do_home']);
