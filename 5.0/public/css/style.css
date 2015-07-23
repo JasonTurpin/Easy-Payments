@@ -1,0 +1,9 @@
+.hoffa {
+    display: none;
+}
+.msgContainer {
+    margin-left: 10px;
+}
+.msgContainer li {
+    list-style: disc;
+}
