@@ -6,3 +6,6 @@
         </a>
     </div>
 </footer>
+<script type="text/javascript">
+    var errorInputs = <?php echo json_encode($errorFields); ?>;
+</script>
