@@ -15,7 +15,10 @@ if (isset($_controller)) {
     echo isset($_action) ? ' ' . $_controller . '-' . $_action . ' ' : '';
 }
 ?>">
+@yield('NavBar')
+@yield('Sidebar')
 @yield('content')
+@yield('Footer')
 @include('includes.Scripts')
 </body>
 </html>
