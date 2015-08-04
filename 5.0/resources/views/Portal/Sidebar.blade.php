@@ -10,7 +10,7 @@
 
             <li class="sub-menu">
                 <a href="javascript:;"{!!
-                    (in_array($_controllerAction, array('admin.listpermissions', 'admin.addpermission', 'admin.editpermission', 'admin.addrole', 'admin.editrole', 'admin.listroles', 'admin.home'))
+                    (in_array($_controllerAction, array('admin.listpermissions', 'admin.addpermission', 'admin.editpermission', 'admin.addrole', 'admin.editrole', 'admin.listroles', 'admin.home', 'admin.edituser', 'admin.adduser', 'admin.listusers'))
                         ? ' class="active"'
                         : '');
                 !!}>
@@ -60,6 +60,28 @@
                         </ul>
                     </li>
 {{-- Admin.Roles END --}}
+
+{{-- Admin.Users START --}}
+                    <li class="sub-menu dcjq-parent-li">
+                        <a href="javascript:;" class="dcjq-parent{!!
+                            (in_array($_controllerAction, array('admin.edituser', 'admin.adduser', 'admin.listusers'))
+                                ? ' active'
+                                : '');
+                        !!}">Users<span class="dcjq-icon"></span></a>
+                        <ul class="sub">
+                            <li{!!
+                                ($_controllerAction == 'admin.adduser'
+                                    ? ' class="active"'
+                                    : '');
+                            !!}><a href="/Admin/addUser">Add</a></li>
+                            <li{!!
+                                ($_controllerAction == 'admin.listusers'
+                                    ? ' class="active"'
+                                    : '');
+                            !!}><a href="/Admin/listUsers">List</a></li>
+                        </ul>
+                    </li>
+{{-- Admin.Users END --}}
                 </ul>
             </li>
         </ul>

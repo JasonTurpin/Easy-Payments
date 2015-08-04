@@ -19,8 +19,10 @@
                                     <div class="list-group panel-body">
                                         <a class="list-group-item" href="/Admin/addPermission/">Add Permission</a>
                                         <a class="list-group-item" href="/Admin/addRole/">Add User Role</a>
+                                        <a class="list-group-item" href="/Admin/addUser/">Add User</a>
                                         <a class="list-group-item" href="/Admin/listPermissions/">List Permission Levels</a>
                                         <a class="list-group-item" href="/Admin/listRoles/">List User Roles</a>
+                                        <a class="list-group-item" href="/Admin/listUsers/">List Users</a>
                                     </div>
                                 </section>
                             </div>

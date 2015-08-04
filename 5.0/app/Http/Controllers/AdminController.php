@@ -1,9 +1,12 @@
 <?php
 namespace App\Http\Controllers;
-use Redirect, View;
+use Redirect, View, Request;
 use \Illuminate\Database\Eloquent\ModelNotFoundException;
 use \App\Http\Requests\UpdateRoleRequest;
-use \App\Role;
+use \App\Http\Requests\CreateUserRequest;
+use \App\Http\Requests\UpdateUserRequest;
+use \App\Http\Requests\UpdatePermissionRequest;
+use \App\Role, \App\User, \App\Permission;
 
 /**
  * Admin Controller - Base class for admin screens
@@ -328,5 +331,176 @@ class AdminController extends PortalController {
         // Redirect the user to the edit page
         return redirect()->route('admin.editpermission', ['permission_id' => $permission->permission_id])
             ->with('dashboardMessages', $this->dashboardMessages);
+    }
+    
+    /**
+     * Creates a new user after passing CreateUserRequest validation
+     *
+     * @param CreateUserRequest $request Handles user validation
+     *
+     * @return Redirect
+     */
+    public function do_createUser(CreateUserRequest $request) {
+        /** User $user */
+        $user = new User();
+
+        // Set values
+        $user->fill($request->all());
+        $user->email = $request->get('email');
+
+        // Set the password hash
+        $user->setPassword($request->get('password'));
+
+        // Save user
+        $user->save();
+
+        // IF user was assigned roles, sync the joiner table
+        $userRoleData = $request->get('roles');
+        if (!empty($userRoleData)) {
+            $user->syncRoles($userRoleData);
+        }
+
+        // Add success message
+        $this->_addDashboardMessage('Successfully created a new user account.', 'success');
+
+        // Redirect the user to the edit page
+        return redirect()->route('admin.edituser', ['user_id' => $user->user_id])
+            ->with('dashboardMessages', $this->dashboardMessages);
+    }
+
+    /**
+     * Add a new user account
+     *
+     * @return View
+     */
+    public function do_addUser() {
+        /** User $user */
+        $user = new User();
+
+        // Populate data from old request
+        $user->fill(Request::old());
+
+        // Share View Variables
+        View::share('user', $user);
+        View::share('userRoles', (array) Request::old('roles'));
+        View::share('Roles', Role::active()->get());
+        View::share('_pageName', 'Add User');
+        View::share('_title', 'Add User');
+        View::share('_pageAction', '/Admin/createUser');
+
+        // Render the template
+        return $this->_renderTemplate('Admin.User');
+    }
+
+    /**
+     * Edit an existing user account
+     *
+     * @param int $user_id The user being edited ID
+     *
+     * @return View
+     */
+    public function do_editUser($user_id) {
+        // Attempt to find the user
+        try {
+            $user = User::findOrFail($user_id);
+
+        // IF an invalid user ID was passed, throw a 404
+        } catch (ModelNotFoundException $ex) {
+            $this->_addDashboardMessage('The user you were looking for does not exist.', 'error');
+            return redirect()->route('admin.listusers')->with('dashboardMessages', $this->dashboardMessages);
+        }
+
+        // Fetchs old form data
+        $oldData = Request::old();
+
+        // IF old form data exists
+        if (is_array($oldData) && !empty($oldData)) {
+            // Set user roles (is case as array for case of null)
+            $userRoles = (array) Request::old('roles');
+
+            // Fill model with old form data
+            $user->fill($oldData);
+        
+        // Old form data does not exist.  Fetch user roles
+        } else {
+            $userRoles = $user->roles->modelKeys();
+        }
+
+        // Share View Variables
+        View::share('user', $user);
+        View::share('userRoles', $userRoles);
+        View::share('Roles', Role::active()->get());
+        View::share('_pageName', 'Edit '.$user->firstName.' '.$user->lastName);
+        View::share('_title', 'Edit '.$user->firstName.' '.$user->lastName);
+        View::share('_pageAction', '/Admin/updateUser/'.$user->user_id);
+
+        // Render the template
+        return $this->_renderTemplate('Admin.User');
+    }
+
+    /**
+     * Updates a user after passing UpdateUserRequest validation
+     *
+     * @param int               $user_id User's ID
+     * @param UpdateUserRequest $request Handles user validation
+     *
+     * @return Redirect
+     */
+    public function do_updateUser($user_id, UpdateUserRequest $request) {
+        // Attempt to find the user
+        try {
+            /** User $user */
+            $user = User::findOrFail($user_id);
+
+        // IF an invalid user ID was passed, throw a 404
+        } catch (ModelNotFoundException $ex) {
+            $this->_addDashboardMessage('The user you were looking for does not exist.', 'error');
+            return redirect()->route('admin.listusers')->with('dashboardMessages', $this->dashboardMessages);
+        }
+
+        // Set values
+        $user->fill($request->all());
+
+        // IF the password was updated, reset the hash
+        $password = $request->get('password');
+        if (!empty($password)) {
+            $user->setPassword($password);
+        }
+
+        // Save user
+        $user->save();
+
+        // Sync the user role data
+        $userRoleData = (array) $request->get('roles');
+        $user->roles()->sync($userRoleData);
+
+        // Add success message
+        $this->_addDashboardMessage('Successfully updated '.$user->firstName.' '.$user->lastName.'.', 'success');
+
+        // Redirect the user to the edit page
+        return redirect()->route('admin.edituser', ['user_id' => $user->user_id])
+            ->with('dashboardMessages', $this->dashboardMessages);
+    }
+
+    /**
+     * List User Accounts
+     *
+     * @return View
+     */
+    public function do_listUsers() {
+        // Share View Variables
+        View::share('Users', User::all());
+        View::share('_pageName', 'List Users');
+        View::share('_title', 'List Users');
+        View::share('_pageAction', '/Admin/listUsers');
+
+        // Include bootstrap's DataTable
+        $this->_includeDataTable();
+
+        // Add custom JS
+        $this->scripts[] = '/js/Admin.ListUsers.js';
+
+        // Render the template
+        return $this->_renderTemplate('Admin.ListUsers');
     }
 }
