@@ -17,6 +17,8 @@
                                         User Account Management
                                     </header>
                                     <div class="list-group panel-body">
+                                        <a class="list-group-item" href="/Admin/addRole/">Add User Role</a>
+                                        <a class="list-group-item" href="/Admin/listRoles/">List User Roles</a>
                                     </div>
                                 </section>
                             </div>
