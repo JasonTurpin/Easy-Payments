@@ -17,3 +17,6 @@ Route::any('/signOut', ['as' => 'portal.signout', 'uses' => 'PortalController@do
 
 // Portal level screens
 Route::get('/Portal', ['as' => 'portal.home', 'uses' => 'PortalController@do_home']);
+
+// Admin level screens
+Route::any('/Admin', ['as' => 'admin.home', 'uses' => 'AdminController@do_home']);
