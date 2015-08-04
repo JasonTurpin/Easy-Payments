@@ -167,4 +167,166 @@ class AdminController extends PortalController {
         return redirect()->route('admin.editrole', ['role_id' => $role->role_id])
             ->with('dashboardMessages', $this->dashboardMessages);
     }
+
+    /**
+     * List Permission Levels
+     *
+     * @return View
+     */
+    public function do_listPermissions() {
+        // Share View Variables
+        View::share('Permissions', Permission::all());
+        View::share('_pageName', 'List Permission Levels');
+        View::share('_title', 'List Permission Levels');
+        View::share('_pageAction', '/Admin/listPermissions');
+
+        // Include bootstrap's DataTable
+        $this->_includeDataTable();
+
+        // Add custom JS
+        $this->scripts[] = '/js/Admin.ListPermissions.js';
+
+        // Render the template
+        return $this->_renderTemplate('Admin.ListPermissions');
+    }
+
+    /**
+     * Add a new permission
+     *
+     * @return View
+     */
+    public function do_addPermission() {
+        /** Permission $permission */
+        $permission = new Permission();
+
+        // Populate data from old request
+        $permission->fill(Request::old());
+
+        // Share View Variables
+        View::share('permission', $permission);
+        View::share('permissionRoles', (array) Request::old('roles'));
+        View::share('Roles', Role::active()->get());
+        View::share('_pageName', 'Add A New Permission Level');
+        View::share('_title', 'Add A New Permission Level');
+        View::share('_pageAction', '/Admin/createPermission');
+
+        // Render the template
+        return $this->_renderTemplate('Admin.Permission');
+    }
+
+    /**
+     * Edit a permission level
+     *
+     * @param int $permission_id The permission level being edited
+     *
+     * @return View
+     */
+    public function do_editPermission($permission_id) {
+        // Attempt to find the permission
+        try {
+            /** Permission $permission */
+            $permission = Permission::findOrFail($permission_id);
+
+        // IF an invalid user ID was passed, throw a 404
+        } catch (ModelNotFoundException $ex) {
+            $this->_addDashboardMessage('The permission level you were looking for does not exist.', 'error');
+            return redirect()->route('admin.listpermissions')->with('dashboardMessages', $this->dashboardMessages);
+        }
+
+        // Fetchs old form data
+        $oldData = Request::old();
+
+        // IF old form data exists
+        if (is_array($oldData) && !empty($oldData)) {
+            // Set user roles (is case as array for case of null)
+            $permissionRoles = (array) Request::old('roles');
+
+            // Fill model with old form data
+            $permission->fill($oldData);
+
+        // Old form data does not exist.  Fetch user roles
+        } else {
+            $permissionRoles = $permission->roles->modelKeys();
+        }
+
+        // Share View Variables
+        View::share('permission', $permission);
+        View::share('permissionRoles', $permissionRoles);
+        View::share('Roles', Role::active()->get());
+        View::share('_pageName', 'Edit '.$permission->label);
+        View::share('_title', 'Edit '.$permission->label);
+        View::share('_pageAction', '/Admin/updatePermission/'.$permission->permission_id);
+
+        // Render the template
+        return $this->_renderTemplate('Admin.Permission');
+    }
+
+    /**
+     * Creates a new user role permission group after UpdatePermissionRequest validation
+     *
+     * @param UpdatePermissionRequest $request Handles user validation
+     *
+     * @return Redirect
+     */
+    public function do_createPermission(UpdatePermissionRequest $request) {
+        /** Permission $permission */
+        $permission = new Permission();
+
+        // Set values
+        $permission->fill($request->all());
+
+        // Save permission
+        $permission->save();
+
+        // IF permission was assigned roles, sync the joiner table
+        $permissionRoleData = $request->get('roles');
+        if (!empty($permissionRoleData)) {
+            $permission->syncRoles($permissionRoleData);
+        }
+
+        // Add success message
+        $this->_addDashboardMessage('Successfully created a new permission level.', 'success');
+
+        // Redirect the user to the edit page
+        return redirect()->route('admin.editpermission', ['permission_id' => $permission->permission_id])
+            ->with('dashboardMessages', $this->dashboardMessages);
+    }
+
+    /**
+     * Updates a user after passing UpdateUserRequest validation
+     *
+     * @param int                     $permission_id Permission ID
+     * @param UpdatePermissionRequest $request       Handles permission validation
+     *
+     * @return Redirect
+     */
+    public function do_updatePermission($permission_id, UpdatePermissionRequest $request) {
+        // Attempt to find the permission
+        try {
+            /** Permission $permission */
+            $permission = Permission::findOrFail($permission_id);
+
+        // IF an invalid permission ID was passed, throw a 404
+        } catch (ModelNotFoundException $ex) {
+            $this->_addDashboardMessage('The permission level you were looking for does not exist.', 'error');
+            return redirect()->route('admin.listpermissions')->with('dashboardMessages', $this->dashboardMessages);
+        }
+
+        // Set values
+        $permission->fill($request->all());
+
+        // Save permission
+        $permission->save();
+
+        // Sync the permission role data
+        $permissionRoleData = (array) $request->get('roles');
+        $permission->syncRoles($permissionRoleData);
+
+        // Add success message
+        $this->_addDashboardMessage('Successfully updated the "'.$permission->label.'" permission level.', 'success');
+
+        // Redirect the user to the edit page
+        return redirect()->route('admin.editpermission', ['permission_id' => $permission->permission_id])
+            ->with('dashboardMessages', $this->dashboardMessages);
+    }
 }

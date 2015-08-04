@@ -18,6 +18,11 @@ Route::get('/Portal', ['as' => 'portal.home', 'uses' => 'PortalController@do_hom
 
 // Admin level screens
 Route::any('/Admin', ['as' => 'admin.home', 'uses' => 'AdminController@do_home']);
+Route::any('/Admin/addPermission', ['as' => 'admin.addpermission', 'uses' => 'AdminController@do_addPermission']);
+Route::any('/Admin/createPermission', ['as' => 'admin.createpermission', 'uses' => 'AdminController@do_createPermission']);
+Route::any('/Admin/updatePermission/{permission_id}', ['as' => 'admin.updatepermission', 'uses' => 'AdminController@do_updatePermission'])->where('permission_id', '\d+');
+Route::any('/Admin/editPermission/{permission_id}', ['as' => 'admin.editpermission', 'uses' => 'AdminController@do_editPermission'])->where('permission_id', '\d+');
+Route::any('/Admin/listPermissions', ['as' => 'admin.listpermissions', 'uses' => 'AdminController@do_listPermissions']);
 Route::any('/Admin/listRoles', ['as' => 'admin.listroles', 'uses' => 'AdminController@do_listRoles']);
 Route::any('/Admin/addRole', ['as' => 'admin.addrole', 'uses' => 'AdminController@do_addRole']);
 Route::any('/Admin/createRole', ['as' => 'admin.createrole', 'uses' => 'AdminController@do_createRole']);
